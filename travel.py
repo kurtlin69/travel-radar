@@ -37,21 +37,27 @@ def generate_excel_bytes(df):
 def get_driver():
     options = Options()
     
-    # ⚠️ 雲端專用設定：開啟無頭模式 (不顯示畫面)，並加入 Linux 伺服器必備參數
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     
-    # 注意：已經把抓取本機 D 槽 user-data-dir 的邏輯移除了，雲端採無痕啟動
+    # 🌟 新增：強制設定大螢幕解析度！很多電商網站沒有大解析度就不會吐出搜尋結果
+    options.add_argument("--window-size=1920,1080") 
     
-    # 反偵測機制 (維持不變)
+    # 🌟 新增：更逼真的偽裝參數，降低被 Cloudflare 等防護機制攔截的機率
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    
+    # 🌟 新增：忽略憑證錯誤 (有時候雲端伺服器連台灣網站會遇到憑證阻擋)
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--allow-running-insecure-content')
     
     driver = webdriver.Chrome(options=options)
+    
+    # 抹除 WebDriver 指紋
     driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
       "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
     })
